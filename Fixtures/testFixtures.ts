@@ -9,6 +9,7 @@ import { PaymentPage } from "../Pages/PaymentPage";
 import { LoginPage } from "../Pages/LoginPage";
 import { ForgotPasswordPage } from "../Pages/ForgotPasswordPage";
 
+
 type MyFixtures = {
     homePage: HomePage;
     productPage: ProductPage;
@@ -18,6 +19,7 @@ type MyFixtures = {
     paymentPage: PaymentPage;
     loginPage: LoginPage;
     forgotPasswordPage: ForgotPasswordPage;
+    
 };
 
 export const test = base.extend<MyFixtures>({
@@ -52,6 +54,8 @@ export const test = base.extend<MyFixtures>({
     forgotPasswordPage: async ({ page }, use) => {
         await use(new ForgotPasswordPage(page));
     },
+
+
 });
 
 export { expect } from "@playwright/test";

@@ -27,7 +27,7 @@ export default defineConfig({
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
     baseURL: 'https://automationexercise.com',
-    headless: false,
+    headless: true,
     screenshot: 'only-on-failure',
     video: 'on',
 
