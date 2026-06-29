@@ -2,36 +2,46 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
+import { AuthPage } from '../../Pages/AuthPage';
 
 test.describe('Logout User', () => {
   test('Logout from second tab (concurrency)', async ({ browser }) => {
-    // 1. Create two pages in the same context to share session/cookies
-    const context = await browser.newContext();
+    // create a shared browser context so pages share cookies/session
+    const context = await browser.newContext(); // new browser context
     try {
-      const pageA = await context.newPage();
-      const pageB = await context.newPage();
+      // open two pages (tabs) in same context
+      const pageA = await context.newPage(); // first tab
+      const pageB = await context.newPage(); // second tab
 
-      // 2. Log in on Tab A
-      await pageA.goto('https://automationexercise.com/', { waitUntil: 'domcontentloaded' });
-      await pageA.click('a:has-text("Signup / Login")');
-      await pageA.fill('input[name="email"]', 'keyir9490@pertok.com');
-      await pageA.fill('input[name="password"]', 'Test@1234');
-      await pageA.click('button:has-text("Login")');
-      await expect(pageA.getByText('Logged in as Test User', { exact: true })).toBeVisible();
+      // create POM instances for both pages
+      const authA = new AuthPage(pageA); // auth actions on tab A
+      const authB = new AuthPage(pageB); // auth actions on tab B
 
-      // 3. Open Tab B and verify user is still logged in
-      await pageB.goto('https://automationexercise.com/', { waitUntil: 'domcontentloaded' });
-      await expect(pageB.getByText('Logged in as Test User', { exact: true })).toBeVisible();
+      // login on Tab A
+      await authA.gotoHome(); // navigate to home from tab A
+      await authA.gotoLogin(); // open login page on tab A
+      await authA.login('keyir9490@pertok.com', 'Test@1234'); // authenticate on tab A
 
-      // 4. Click 'Logout' in Tab A
-      await pageA.click('a:has-text("Logout")');
-      await expect(pageA.getByText('Login to your account', { exact: true })).toBeVisible();
+      // verify Tab B sees the logged-in state
+      await authB.gotoHome(); // navigate to home on tab B
+      await expect(pageB.getByText('Logged in as Test User', { exact: true })).toBeVisible(); // ensure logged-in indicator
 
-      // 5. Reload Tab B and verify session is invalidated globally
-      await pageB.reload({ waitUntil: 'domcontentloaded' });
-      await expect(pageB.locator('h2').filter({ hasText: 'Full-Fledged practice website for Automation Engineers' }).first()).toBeVisible();
+      // logout from Tab A
+      await authA.logout(); // click logout on tab A and wait for login page
+
+      // reload Tab B and verify the session is invalidated
+      await pageB.reload(); // refresh tab B
+      await pageB.waitForLoadState('domcontentloaded'); // wait for DOM to be ready
+      // assert that the signup/login entry point is shown (covers either login page or header state)
+      await expect(pageB.getByRole('link', { name: 'Signup / Login' })).toBeVisible(); // tab B should show signup/login
     } finally {
-      await context.close();
+      // close context if still open; ignore errors if it's already disposed
+      try {
+        await context.close(); // attempt to close the browser context
+      } catch (e) {
+        // ignore errors from closing an already-disposed context
+        console.warn('context.close() threw:', e);
+      }
     }
   });
 

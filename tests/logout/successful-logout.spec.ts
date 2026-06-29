@@ -2,25 +2,26 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
+import { AuthPage } from '../../Pages/AuthPage';
 
 test.describe('Logout User', () => {
   test('Successful logout after valid login (happy path)', async ({ page }) => {
-    // 1. Launch browser & navigate to home
-    await page.goto('https://automationexercise.com/');~
-    // 2. Click on 'Signup / Login'
-    await page.click('a:has-text("Signup / Login")');
-    // 3. Verify 'Login to your account' is visible
-    await expect(page.locator('text=Login to your account')).toBeVisible();
-    // 4. Enter correct email and password and click 'Login'
-    await page.fill('input[name="email"]', 'keyir9490@pertok.com');
-    await page.fill('input[name="password"]', 'Test@1234');
-    await page.click('button:has-text("Login")');
-    // 5. Verify 'Logged in as username' is visible
-    await expect(page.getByText('Logged in as Test User', { exact: true })).toBeVisible();
-  
-    // 6. Click 'Logout'
-    await page.click('a:has-text("Logout")');
-    // 7. Verify that user is navigated to login page
-    await expect(page).toHaveURL('https://automationexercise.com/login');
+    // create AuthPage POM instance for this test
+    const auth = new AuthPage(page); // instantiate POM with the playwright page
+
+    // navigate to the home page
+    await auth.gotoHome(); // go to https://automationexercise.com/
+
+    // open the login page
+    await auth.gotoLogin(); // click 'Signup / Login' and wait for login heading
+
+    // perform login with valid credentials
+    await auth.login('keyir9490@pertok.com', 'Test@1234'); // fill form and submit
+
+    // perform logout via POM
+    await auth.logout(); // click logout and wait for login page
+
+    // assert we're back on the login page
+    await expect(page).toHaveURL('https://automationexercise.com/login'); // final URL check
   });
-}); 
+});
